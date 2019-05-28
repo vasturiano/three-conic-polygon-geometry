@@ -1,0 +1,69 @@
+<head>
+  <style> body { margin: 0; } </style>
+
+  <script src="//unpkg.com/three"></script>
+  <script src="//unpkg.com/three-trackballcontrols-web/dist/three-trackballcontrols.min.js"></script>
+  <!--<script src="//unpkg.com/three-conic-polygon-geometry"></script>-->
+  <script src="../../dist/three-conic-polygon-geometry.js"></script>
+</head>
+
+<body>
+<div id="viz"></div>
+
+<script>
+  fetch('../geojson/ne_110m_admin_0_countries.geojson').then(res => res.json()).then(countries =>
+  {
+    const materials = [
+      new THREE.MeshLambertMaterial({ side: THREE.DoubleSide, color: 'green', opacity: 0.1, transparent: true }), // side material
+      new THREE.MeshLambertMaterial({ side: THREE.DoubleSide, color: 'red', opacity: 0.7, transparent: true }), // bottom cap material
+      new THREE.MeshLambertMaterial({ side: THREE.DoubleSide, color: 'red', opacity: 0.7, transparent: true }) // top cap material
+    ];
+
+    const polygonMeshes = [];
+    countries.features.forEach(({ properties, geometry }) => {
+      const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
+      const alt = properties.GDP_MD_EST / Math.max(1e5, properties.POP_EST) * 1e3;
+
+      polygons.forEach(coords => {
+        polygonMeshes.push(
+          new THREE.Mesh(
+            new THREE.ConicPolygonBufferGeometry(coords, 0, alt),
+            materials
+          )
+        );
+      });
+    });
+
+    // Setup renderer
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('viz').appendChild(renderer.domElement);
+
+    // Setup scene
+    const scene = new THREE.Scene();
+    polygonMeshes.forEach(mesh => scene.add(mesh));
+    scene.add(new THREE.AmbientLight(0xbbbbbb));
+    scene.add(new THREE.DirectionalLight(0xffffff, 0.6));
+
+    // Setup camera
+    const camera = new THREE.PerspectiveCamera();
+    camera.aspect = window.innerWidth/ window.innerHeight;
+    camera.updateProjectionMatrix();
+    camera.position.z = 200;
+
+    // Add camera controls
+    const tbControls = new TrackballControls(camera, renderer.domElement);
+    tbControls.minDistance = 1;
+    tbControls.rotateSpeed = 5;
+    tbControls.zoomSpeed = 0.8;
+
+    // Kick-off renderer
+    (function animate() { // IIFE
+      // Frame cycle
+      tbControls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    })();
+  });
+</script>
+</body>
