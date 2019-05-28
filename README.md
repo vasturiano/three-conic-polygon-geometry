@@ -4,6 +4,10 @@ A ThreeJS geometry class for drawing polygons on a sphere using cones. Provides 
 
 [![NPM](https://nodei.co/npm/data-joint.png?compact=true)](https://nodei.co/npm/data-joint/)
 
+<p align="center">
+  <a href="//vasturiano.github.io/three-conic-polygon-geometry/example/countries-gdp-per-capita/"><img width="80%" src="https://vasturiano.github.io/three-conic-polygon-geometry/example/countries-gdp-per-capita/preview.png"></a>
+</p>
+
 Examples:
 * [Natural Earth Countries](https://vasturiano.github.io/three-conic-polygon-geometry/example/countries/) ([source](https://github.com/vasturiano/three-conic-polygon-geometry/blob/master/example/countries/index.html))
 * [Countries GDP per Capita](https://vasturiano.github.io/three-conic-polygon-geometry/example/countries-gdp-per-capita/) ([source](https://github.com/vasturiano/three-conic-polygon-geometry/blob/master/example/countries-gdp-per-capita/index.html))
