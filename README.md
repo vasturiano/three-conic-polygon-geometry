@@ -1,6 +1,8 @@
 # ThreeJS Conic Polygon Geometry
 
-A ThreeJS geometry class for drawing polygons on a sphere using cones. Provides both `ConicPolygonGeometry` and `ConicPolygonBufferGeometry`.
+A ThreeJS geometry class for drawing polygons on a sphere using cones. 
+
+Both `ConicPolygonGeometry` and `ConicPolygonBufferGeometry` are provided.
 
 [![NPM](https://nodei.co/npm/data-joint.png?compact=true)](https://nodei.co/npm/data-joint/)
 
