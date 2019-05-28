@@ -1,0 +1,60 @@
+{
+  "name": "three-conic-polygon-geometry",
+  "version": "1.0.0",
+  "description": "ThreeJS geometry for drawing polygons on a sphere",
+  "unpkg": "dist/three-conic-polygon-geometry.min.js",
+  "main": "dist/three-conic-polygon-geometry.common.js",
+  "module": "dist/three-conic-polygon-geometry.module.js",
+  "homepage": "https://github.com/vasturiano/three-conic-polygon-geometry",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vasturiano/three-conic-polygon-geometry.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vasturiano/three-conic-polygon-geometry/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "3d",
+    "three",
+    "polygons",
+    "sphere",
+    "conic",
+    "webgl",
+    "geojson"
+  ],
+  "author": {
+    "name": "Vasco Asturiano",
+    "url": "http://bl.ocks.org/vasturiano"
+  },
+  "files": [
+    "src/**/*",
+    "dist/**/*",
+    "example/**/*"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "dev": "rollup -c -w",
+    "minify": "terser dist/three-conic-polygon-geometry.js -o dist/three-conic-polygon-geometry.min.js -c -m --comments '/Version/'",
+    "build-module": "rollup -c rollup.config.module.js",
+    "prepare": "npm run build && npm run minify && npm run build-module"
+  },
+  "dependencies": {
+    "earcut": "^2.1.5"
+  },
+  "peerDependencies": {
+    "three": "*"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
+    "rimraf": "^2.6.3",
+    "rollup": "^1.12.4",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-commonjs": "^10.0.0",
+    "rollup-plugin-node-resolve": "^5.0.0",
+    "terser": "^4.0.0"
+  }
+}
