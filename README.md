@@ -1,10 +1,13 @@
-# ThreeJS Conic Polygon Geometry
+ThreeJS Conic Polygon Geometry
+==============
+
+[![NPM package][npm-img]][npm-url]
+[![Build Size][build-size-img]][build-size-url]
+[![Dependencies][dependencies-img]][dependencies-url]
 
 A ThreeJS geometry class for drawing polygons on a sphere using cones. 
 
 Both `ConicPolygonGeometry` and `ConicPolygonBufferGeometry` are provided.
-
-[![NPM](https://nodei.co/npm/data-joint.png?compact=true)](https://nodei.co/npm/data-joint/)
 
 <p align="center">
   <a href="//vasturiano.github.io/three-conic-polygon-geometry/example/countries-gdp-per-capita/"><img width="80%" src="https://vasturiano.github.io/three-conic-polygon-geometry/example/countries-gdp-per-capita/preview.png"></a>
@@ -62,3 +65,11 @@ The geometry supports three distinct groups to which different materials can be 
 * <b>0</b>: The side surface of the cone.
 * <b>1</b>: The bottom surface of the cone.
 * <b>2</b>: The top surface of the cone.
+
+
+[npm-img]: https://img.shields.io/npm/v/three-conic-polygon-geometry.svg
+[npm-url]: https://npmjs.org/package/three-conic-polygon-geometry
+[build-size-img]: https://img.shields.io/bundlephobia/minzip/three-conic-polygon-geometry.svg
+[build-size-url]: https://bundlephobia.com/result?p=three-conic-polygon-geometry
+[dependencies-img]: https://img.shields.io/david/vasturiano/three-conic-polygon-geometry.svg
+[dependencies-url]: https://david-dm.org/vasturiano/three-conic-polygon-geometry
