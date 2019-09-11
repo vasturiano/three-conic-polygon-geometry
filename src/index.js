@@ -15,7 +15,7 @@ const THREE = window.THREE
 import earcut from 'earcut';
 
 function ConicPolygonGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides) {
-  Geometry.call(this);
+  THREE.Geometry.call(this);
 
   this.type = 'ConicPolygonGeometry';
 
@@ -32,12 +32,12 @@ function ConicPolygonGeometry(polygonGeoJson, startHeight, endHeight, closedBott
   this.mergeVertices();
 }
 
-ConicPolygonGeometry.prototype = Object.create(Geometry.prototype);
+ConicPolygonGeometry.prototype = Object.create(THREE.Geometry.prototype);
 ConicPolygonGeometry.prototype.constructor = ConicPolygonGeometry;
 
 function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides) {
 
-  BufferGeometry.call(this);
+  THREE.BufferGeometry.call(this);
 
   this.type = 'ConicPolygonBufferGeometry';
 
@@ -86,7 +86,7 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
 
   // build geometry
   this.setIndex(indices);
-  this.addAttribute('position', new Float32BufferAttribute(vertices, 3));
+  this.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 
   //
 
@@ -131,7 +131,7 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
   }
 }
 
-ConicPolygonBufferGeometry.prototype = Object.create(BufferGeometry.prototype);
+ConicPolygonBufferGeometry.prototype = Object.create(THREE.BufferGeometry.prototype);
 ConicPolygonBufferGeometry.prototype.constructor = ConicPolygonBufferGeometry;
 
 //
