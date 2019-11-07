@@ -86,7 +86,7 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
 
   // build geometry
   this.setIndex(indices);
-  this.addAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  this.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 
   //
 
