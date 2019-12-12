@@ -14,6 +14,9 @@ const THREE = window.THREE
 
 import earcut from 'earcut';
 
+// support both modes for backwards threejs compatibility
+const setAttributeFn = new THREE.BufferGeometry().setAttribute ? 'setAttribute' : 'addAttribute';
+
 function ConicPolygonGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides) {
   THREE.Geometry.call(this);
 
@@ -86,7 +89,7 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
 
   // build geometry
   this.setIndex(indices);
-  this.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  this[setAttributeFn]('position', new THREE.Float32BufferAttribute(vertices, 3));
 
   //
 
