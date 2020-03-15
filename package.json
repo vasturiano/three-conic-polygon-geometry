@@ -1,6 +1,6 @@
 {
   "name": "three-conic-polygon-geometry",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "ThreeJS geometry for drawing polygons on a sphere",
   "unpkg": "dist/three-conic-polygon-geometry.min.js",
   "main": "dist/three-conic-polygon-geometry.common.js",
