@@ -91,6 +91,10 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
   this.setIndex(indices);
   this[setAttributeFn]('position', new THREE.Float32BufferAttribute(vertices, 3));
 
+  // auto-calculate normals
+  this.computeFaceNormals();
+  this.computeVertexNormals();
+
   //
 
   function generateVertices(altitude) {
