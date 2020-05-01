@@ -2,9 +2,10 @@
   <style> body { margin: 0; } </style>
 
   <script src="//unpkg.com/three"></script>
-  <script src="//unpkg.com/three-trackballcontrols-web/dist/three-trackballcontrols.min.js"></script>
+  <script src="//unpkg.com/three/examples/js/controls/TrackballControls.js"></script>
+
   <script src="//unpkg.com/three-conic-polygon-geometry"></script>
-  <!--<script src="../../dist/three-conic-polygon-geometry.js"></script>-->
+<!--  <script src="../../dist/three-conic-polygon-geometry.js"></script>-->
 </head>
 
 <body>
@@ -52,7 +53,7 @@
     camera.position.z = 200;
 
     // Add camera controls
-    const tbControls = new TrackballControls(camera, renderer.domElement);
+    const tbControls = new THREE.TrackballControls(camera, renderer.domElement);
     tbControls.minDistance = 1;
     tbControls.rotateSpeed = 5;
     tbControls.zoomSpeed = 0.8;
