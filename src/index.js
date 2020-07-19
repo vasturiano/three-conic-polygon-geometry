@@ -12,12 +12,15 @@ const THREE = window.THREE
   Geometry
 };
 
+import Delaunator from 'delaunator';
 import earcut from 'earcut';
+import { geoContains, geoDistance, geoInterpolate } from 'd3-geo';
+import { extent, mean, merge as flatten } from 'd3-array';
 
 // support both modes for backwards threejs compatibility
 const setAttributeFn = new THREE.BufferGeometry().setAttribute ? 'setAttribute' : 'addAttribute';
 
-function ConicPolygonGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides) {
+function ConicPolygonGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides, curvatureResolution) {
   THREE.Geometry.call(this);
 
   this.type = 'ConicPolygonGeometry';
@@ -28,7 +31,8 @@ function ConicPolygonGeometry(polygonGeoJson, startHeight, endHeight, closedBott
     endHeight,
     closedBottom,
     closedTop,
-    includeSides
+    includeSides,
+    curvatureResolution
   };
 
   this.fromBufferGeometry(new ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides));
@@ -38,7 +42,7 @@ function ConicPolygonGeometry(polygonGeoJson, startHeight, endHeight, closedBott
 ConicPolygonGeometry.prototype = Object.create(THREE.Geometry.prototype);
 ConicPolygonGeometry.prototype.constructor = ConicPolygonGeometry;
 
-function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides) {
+function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides, curvatureResolution) {
 
   THREE.BufferGeometry.call(this);
 
@@ -50,7 +54,8 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
     endHeight,
     closedBottom,
     closedTop,
-    includeSides
+    includeSides,
+    curvatureResolution
   };
 
   // defaults
@@ -59,33 +64,29 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
   closedBottom = closedBottom !== undefined ? closedBottom : true;
   closedTop = closedTop !== undefined ? closedTop : true;
   includeSides = includeSides !== undefined ? includeSides : true;
+  curvatureResolution = curvatureResolution || 5; // in angular degrees
 
-  // calc vertices & indices
-  const { vertices: bottomVerts, holes } = generateVertices(startHeight);
-  const { vertices: topVerts } = generateVertices(endHeight);
-  const numPoints = Math.round(topVerts.length / 3);
-  const vertices = [...topVerts, ...bottomVerts];
+  // pre-calculate contour and triangulation
+  const contourGeoJson = interpolateContourPoints(polygonGeoJson, curvatureResolution);
+  const geoTriangles = (closedTop || closedBottom) && triangulateGeoSurface();
 
+  let vertices = [];
   let indices = [];
   let groupCnt = 0; // add groups to apply different materials to torso / caps
 
-  if (includeSides) {
+  const addGroup = groupData => {
+    const prevVertCnt = Math.round(vertices.length / 3);
     const prevIndCnt = indices.length;
-    indices = indices.concat(generateTorso());
-    this.addGroup(prevIndCnt, indices.length - prevIndCnt, groupCnt++);
-  }
 
-  if (closedBottom) {
-    const prevIndCnt = indices.length;
-    indices = indices.concat(generateCap(false));
-    this.addGroup(prevIndCnt, indices.length - prevIndCnt, groupCnt++);
-  }
+    vertices = vertices.concat(groupData.vertices);
+    indices = indices.concat(!prevVertCnt ? groupData.indices : groupData.indices.map(ind => ind + prevVertCnt));
 
-  if (closedTop) {
-    const prevIndCnt = indices.length;
-    indices = indices.concat(generateCap(true));
     this.addGroup(prevIndCnt, indices.length - prevIndCnt, groupCnt++);
-  }
+  };
+
+  includeSides && addGroup(generateTorso());
+  closedBottom && addGroup(generateCap(startHeight));
+  closedTop && addGroup(generateCap(endHeight));
 
   // build geometry
   this.setIndex(indices);
@@ -97,13 +98,19 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
 
   //
 
-  function generateVertices(altitude) {
-    const coords3d = polygonGeoJson.map(coords => coords.map(([lng, lat]) => polar2Cartesian(lat, lng, altitude)));
+  function generateVertices(polygon, altitude) {
+    const coords3d = polygon.map(coords => coords.map(([lng, lat]) => polar2Cartesian(lat, lng, altitude)));
     // returns { vertices, holes, coordinates }. Each point generates 3 vertice items (x,y,z).
     return earcut.flatten(coords3d);
   }
 
   function generateTorso() {
+    const { vertices: bottomVerts, holes } = generateVertices(contourGeoJson, startHeight);
+    const { vertices: topVerts } = generateVertices(contourGeoJson, endHeight);
+
+    const vertices = flatten([topVerts, bottomVerts]);
+    const numPoints = Math.round(topVerts.length / 3);
+
     const holesIdx = new Set(holes);
     let lastHoleIdx = 0;
 
@@ -123,18 +130,48 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
       indices.push(v1Idx + numPoints, v1Idx, v0Idx);
     }
 
-    return indices;
+    return { indices, vertices };
   }
 
-  function generateCap(top = true) {
-    // !! using the 3d coords generates shapes with the wrong winding, connecting the outsides of the contour
-    // so we derive the indexes from the lat,lng coordinates directly
-    // let capIndices = earcut(top ? topVerts : bottomVerts, holes, 3);
-    let capIndices = earcut(earcut.flatten(polygonGeoJson).vertices, holes, 2);
+  function generateCap(radius) {
+    return {
+      indices: geoTriangles.indices,
+      vertices: generateVertices([geoTriangles.points], radius).vertices
+    }
+  }
 
-    !top && (capIndices = capIndices.map(v => v + numPoints)); // translate bottom indices
+  function triangulateGeoSurface() {
+    const edgePnts = flatten(contourGeoJson);
+    const innerPoints = getInnerGeoPoints(contourGeoJson, curvatureResolution);
 
-    return capIndices;
+    const points = [...edgePnts, ...innerPoints];
+
+    const delaunay = Delaunator.from(points);
+
+    const indices = [];
+
+    const maxDistance = Math.hypot(curvatureResolution, curvatureResolution) * 1.1; // with small margin of error
+    const boundariesGeojson = { type: 'Polygon', coordinates: polygonGeoJson };
+    for (let i=0, len=delaunay.triangles.length; i < len; i+=3) {
+      const inds = [0, 1, 2].map(idx => delaunay.triangles[i+idx]);
+      const triangle = inds.map(indice => points[indice]);
+
+      // exclude triangles longer than the max distance
+      const largestSide = Math.max(...[[0,1],[1,2],[2,0]].map(([i0, i1]) =>
+        Math.hypot(...[0, 1].map(cIdx => triangle[i1][cIdx]- triangle[i0][cIdx]))
+      ));
+      if (largestSide > maxDistance) continue;
+
+      // exclude edge triangles outside polygon perimeter or through holes
+      if (inds.some(ind => ind < edgePnts.length)) {
+        const triangleCentroid = [0, 1].map(coordIdx => mean(triangle, p => p[coordIdx]));
+        if (!geoContains(boundariesGeojson, triangleCentroid)) continue;
+      }
+
+      indices.push(...inds);
+    }
+
+    return { points, indices };
   }
 }
 
@@ -151,6 +188,61 @@ function polar2Cartesian(lat, lng, r = 0) {
     r * Math.cos(phi), // y
     r * Math.sin(phi) * Math.sin(theta) // z
   ];
+}
+
+function interpolateContourPoints(polygonGeoJson, maxDistance) {
+  // add interpolated points for segments that are further apart than the max distance
+  return polygonGeoJson.map(coords => {
+    const pnts = [];
+
+    let prevPnt;
+    coords.forEach(pnt => {
+      if (prevPnt) {
+        const dist = geoDistance(pnt, prevPnt) * 180 / Math.PI;
+        if (dist > maxDistance) {
+          const interpol = geoInterpolate(prevPnt, pnt);
+          const tStep = 1 / Math.ceil(dist / maxDistance);
+
+          let t = tStep;
+          while (t < 1) {
+            pnts.push(interpol(t));
+            t += tStep;
+          }
+        }
+      }
+
+      pnts.push(prevPnt = pnt);
+    });
+
+    return pnts;
+  });
+}
+
+function getInnerGeoPoints(polygonGeoJson, maxDistance) {
+  const [minLng, maxLng] = extent(polygonGeoJson[0], p => p[0]);
+  const [minLat, maxLat] = extent(polygonGeoJson[0], p => p[1]);
+
+  // distribute grid remainder equally on both sides
+  const startLng = minLng + (maxLng - minLng)%maxDistance / 2;
+  const startLat = minLat + (maxLat - minLat)%maxDistance / 2;
+
+  const pnts = [];
+  const boundariesGeojson = { type: 'Polygon', coordinates: polygonGeoJson };
+
+  // iterate through grid
+  let lng = startLng;
+  let lat;
+  while (lng < maxLng) {
+    lat = startLat;
+    while (lat < maxLat) {
+      const pnt = [lng, lat];
+      geoContains(boundariesGeojson, pnt) && pnts.push(pnt);
+      lat += maxDistance;
+    }
+    lng += maxDistance;
+  }
+
+  return pnts;
 }
 
 export { ConicPolygonGeometry, ConicPolygonBufferGeometry };
