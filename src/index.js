@@ -14,7 +14,8 @@ const THREE = window.THREE
 
 import Delaunator from 'delaunator';
 import earcut from 'earcut';
-import { geoContains, geoDistance, geoInterpolate } from 'd3-geo';
+import turfPointInPolygon from '@turf/boolean-point-in-polygon';
+import { geoDistance, geoInterpolate } from 'd3-geo';
 import { extent, mean, merge as flatten } from 'd3-array';
 
 // support both modes for backwards threejs compatibility
@@ -64,7 +65,7 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
   closedBottom = closedBottom !== undefined ? closedBottom : true;
   closedTop = closedTop !== undefined ? closedTop : true;
   includeSides = includeSides !== undefined ? includeSides : true;
-  curvatureResolution = curvatureResolution || 10; // in angular degrees
+  curvatureResolution = curvatureResolution || 5; // in angular degrees
 
   // pre-calculate contour and triangulation
   const contourGeoJson = interpolateContourPoints(polygonGeoJson, curvatureResolution);
@@ -148,28 +149,21 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
 
     let indices = [];
 
-    if (!innerPoints.length) { // earcut triangulation more performant if it's only using the polygon perimeter
+    if (!innerPoints.length) { // earcut triangulation slightly more performant if it's only using the polygon perimeter
       const { vertices, holes = [] } = earcut.flatten(contourGeoJson);
       indices = earcut(vertices, holes, 2);
     } else {
       const delaunay = Delaunator.from(points);
 
-      const maxDistance = Math.hypot(curvatureResolution, curvatureResolution) * 1.1; // with small margin of error
       const boundariesGeojson = {type: 'Polygon', coordinates: polygonGeoJson};
       for (let i = 0, len = delaunay.triangles.length; i < len; i += 3) {
         const inds = [0, 1, 2].map(idx => delaunay.triangles[i + idx]);
         const triangle = inds.map(indice => points[indice]);
 
-        // exclude triangles longer than the max distance
-        const largestSide = Math.max(...[[0, 1], [1, 2], [2, 0]].map(([i0, i1]) =>
-          Math.hypot(...[0, 1].map(cIdx => triangle[i1][cIdx] - triangle[i0][cIdx]))
-        ));
-        if (largestSide > maxDistance) continue;
-
         // exclude edge triangles outside polygon perimeter or through holes
         if (inds.some(ind => ind < edgePnts.length)) {
           const triangleCentroid = [0, 1].map(coordIdx => mean(triangle, p => p[coordIdx]));
-          if (!geoContains(boundariesGeojson, triangleCentroid)) continue;
+          if (!pointInside(triangleCentroid, boundariesGeojson)) continue;
         }
 
         indices.push(...inds);
@@ -193,6 +187,10 @@ function polar2Cartesian(lat, lng, r = 0) {
     r * Math.cos(phi), // y
     r * Math.sin(phi) * Math.sin(theta) // z
   ];
+}
+
+function pointInside(pnt, polygonGeoJson) {
+  return turfPointInPolygon(pnt, polygonGeoJson);
 }
 
 function interpolateContourPoints(polygonGeoJson, maxDistance) {
@@ -244,7 +242,7 @@ function getInnerGeoPoints(polygonGeoJson, maxDistance) {
     lat = startLat;
     while (lat < maxLat) {
       const pnt = [lng, lat];
-      geoContains(boundariesGeojson, pnt) && pnts.push(pnt);
+      pointInside(pnt, boundariesGeojson) && pnts.push(pnt);
       lat += maxDistance;
     }
     lng += maxDistance;
