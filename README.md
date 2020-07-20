@@ -51,7 +51,7 @@ const myMesh = new THREE.Mesh(
 * <b>closedBottom</b>: Whether to add a cap surface on the cone bottom. Default is `true`.
 * <b>closedTop</b>: Whether to add a cap surface on the cone top. Default is `true`.
 * <b>includeSides</b>: Whether to include the side surfaces of the cone. Default is `true`.
-* <b>curvatureResolution</b>: The resolution in angular degrees of the sphere curvature. The finer the resolution, the more the polygon is fragmented into smaller faces to approximate the spheric surface, at the cost of performance. Default is `5`.
+* <b>curvatureResolution</b>: The resolution in angular degrees of the sphere curvature. The finer the resolution, the more the polygon is fragmented into smaller faces to approximate the spheric surface, at the cost of performance. Default is `10`.
 
 ### Properties
 

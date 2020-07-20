@@ -64,7 +64,7 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
   closedBottom = closedBottom !== undefined ? closedBottom : true;
   closedTop = closedTop !== undefined ? closedTop : true;
   includeSides = includeSides !== undefined ? includeSides : true;
-  curvatureResolution = curvatureResolution || 5; // in angular degrees
+  curvatureResolution = curvatureResolution || 10; // in angular degrees
 
   // pre-calculate contour and triangulation
   const contourGeoJson = interpolateContourPoints(polygonGeoJson, curvatureResolution);
