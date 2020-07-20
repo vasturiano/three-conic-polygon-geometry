@@ -142,33 +142,38 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
 
   function triangulateGeoSurface() {
     const edgePnts = flatten(contourGeoJson);
-    const innerPoints = getInnerGeoPoints(contourGeoJson, curvatureResolution);
+    const innerPoints = getInnerGeoPoints(polygonGeoJson, curvatureResolution);
 
     const points = [...edgePnts, ...innerPoints];
 
-    const delaunay = Delaunator.from(points);
+    let indices = [];
 
-    const indices = [];
+    if (!innerPoints.length) { // earcut triangulation more performant if it's only using the polygon perimeter
+      const { vertices, holes = [] } = earcut.flatten(contourGeoJson);
+      indices = earcut(vertices, holes, 2);
+    } else {
+      const delaunay = Delaunator.from(points);
 
-    const maxDistance = Math.hypot(curvatureResolution, curvatureResolution) * 1.1; // with small margin of error
-    const boundariesGeojson = { type: 'Polygon', coordinates: polygonGeoJson };
-    for (let i=0, len=delaunay.triangles.length; i < len; i+=3) {
-      const inds = [0, 1, 2].map(idx => delaunay.triangles[i+idx]);
-      const triangle = inds.map(indice => points[indice]);
+      const maxDistance = Math.hypot(curvatureResolution, curvatureResolution) * 1.1; // with small margin of error
+      const boundariesGeojson = {type: 'Polygon', coordinates: polygonGeoJson};
+      for (let i = 0, len = delaunay.triangles.length; i < len; i += 3) {
+        const inds = [0, 1, 2].map(idx => delaunay.triangles[i + idx]);
+        const triangle = inds.map(indice => points[indice]);
 
-      // exclude triangles longer than the max distance
-      const largestSide = Math.max(...[[0,1],[1,2],[2,0]].map(([i0, i1]) =>
-        Math.hypot(...[0, 1].map(cIdx => triangle[i1][cIdx]- triangle[i0][cIdx]))
-      ));
-      if (largestSide > maxDistance) continue;
+        // exclude triangles longer than the max distance
+        const largestSide = Math.max(...[[0, 1], [1, 2], [2, 0]].map(([i0, i1]) =>
+          Math.hypot(...[0, 1].map(cIdx => triangle[i1][cIdx] - triangle[i0][cIdx]))
+        ));
+        if (largestSide > maxDistance) continue;
 
-      // exclude edge triangles outside polygon perimeter or through holes
-      if (inds.some(ind => ind < edgePnts.length)) {
-        const triangleCentroid = [0, 1].map(coordIdx => mean(triangle, p => p[coordIdx]));
-        if (!geoContains(boundariesGeojson, triangleCentroid)) continue;
+        // exclude edge triangles outside polygon perimeter or through holes
+        if (inds.some(ind => ind < edgePnts.length)) {
+          const triangleCentroid = [0, 1].map(coordIdx => mean(triangle, p => p[coordIdx]));
+          if (!geoContains(boundariesGeojson, triangleCentroid)) continue;
+        }
+
+        indices.push(...inds);
       }
-
-      indices.push(...inds);
     }
 
     return { points, indices };
@@ -221,6 +226,9 @@ function interpolateContourPoints(polygonGeoJson, maxDistance) {
 function getInnerGeoPoints(polygonGeoJson, maxDistance) {
   const [minLng, maxLng] = extent(polygonGeoJson[0], p => p[0]);
   const [minLat, maxLat] = extent(polygonGeoJson[0], p => p[1]);
+
+  // polygon smaller than maxDistance -> no inner points
+  if (Math.max(maxLng - minLng, maxLat - minLat) < maxDistance) return [];
 
   // distribute grid remainder equally on both sides
   const startLng = minLng + (maxLng - minLng)%maxDistance / 2;
