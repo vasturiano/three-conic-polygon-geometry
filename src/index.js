@@ -228,7 +228,7 @@ function getInnerGeoPoints(polygonGeoJson, maxDistance) {
   const [minLat, maxLat] = extent(polygonGeoJson[0], p => p[1]);
 
   // polygon smaller than maxDistance -> no inner points
-  if (Math.max(maxLng - minLng, maxLat - minLat) < maxDistance) return [];
+  if (Math.min(maxLng - minLng, maxLat - minLat) < maxDistance) return [];
 
   // distribute grid remainder equally on both sides
   const startLng = minLng + (maxLng - minLng)%maxDistance / 2;
