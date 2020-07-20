@@ -8,7 +8,8 @@ type Parameters = {
   endHeight: number,
   closedBottom: boolean,
   closedTop: boolean,
-  includeSides: boolean
+  includeSides: boolean,
+  curvatureResolution: number
 };
 
 export declare class ConicPolygonGeometry extends Geometry {
@@ -18,7 +19,8 @@ export declare class ConicPolygonGeometry extends Geometry {
     endHeight?: number,
     closedBottom?: boolean,
     closedTop?: boolean,
-    includeSides?: boolean
+    includeSides?: boolean,
+    curvatureResolution?: number
   );
 
   parameters: Parameters;
@@ -31,7 +33,8 @@ export declare class ConicPolygonBufferGeometry extends BufferGeometry {
     endHeight?: number,
     closedBottom?: boolean,
     closedTop?: boolean,
-    includeSides?: boolean
+    includeSides?: boolean,
+    curvatureResolution?: number
   );
 
   parameters: Parameters;
