@@ -36,7 +36,7 @@ function ConicPolygonGeometry(polygonGeoJson, startHeight, endHeight, closedBott
     curvatureResolution
   };
 
-  this.fromBufferGeometry(new ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides));
+  this.fromBufferGeometry(new ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides, curvatureResolution));
   this.mergeVertices();
 }
 
