@@ -86,8 +86,8 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
   };
 
   includeSides && addGroup(generateTorso());
-  closedBottom && addGroup(generateCap(startHeight));
-  closedTop && addGroup(generateCap(endHeight));
+  closedBottom && addGroup(generateCap(startHeight, false));
+  closedTop && addGroup(generateCap(endHeight, true));
 
   // build geometry
   this.setIndex(indices);
@@ -134,9 +134,10 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
     return { indices, vertices };
   }
 
-  function generateCap(radius) {
+  function generateCap(radius, isTop= true) {
     return {
-      indices: geoTriangles.indices,
+      // need to reverse-wind the bottom triangles to make them face outwards
+      indices: isTop ? geoTriangles.indices : geoTriangles.indices.slice().reverse(),
       vertices: generateVertices([geoTriangles.points], radius).vertices
     }
   }
@@ -157,7 +158,7 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
 
       const boundariesGeojson = {type: 'Polygon', coordinates: polygonGeoJson};
       for (let i = 0, len = delaunay.triangles.length; i < len; i += 3) {
-        const inds = [0, 1, 2].map(idx => delaunay.triangles[i + idx]);
+        const inds = [2, 1, 0].map(idx => delaunay.triangles[i + idx]); // reverse wound to have same orientation as earcut
         const triangle = inds.map(indice => points[indice]);
 
         // exclude edge triangles outside polygon perimeter or through holes
