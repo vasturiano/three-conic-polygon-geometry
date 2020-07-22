@@ -17,7 +17,7 @@
     const materials = [
       new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, color: 'green', opacity: 0.1, transparent: true }), // side material
       new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, color: 'red', opacity: 0.7, transparent: true }), // bottom cap material
-      new THREE.MeshBasicMaterial({ color: 'red', opacity: 0.7, transparent: true }) // top cap material
+      new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, color: 'red', opacity: 0.7, transparent: true }) // top cap material
     ];
 
     const polygonMeshes = [];
