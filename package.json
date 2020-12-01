@@ -42,6 +42,7 @@
     "@turf/boolean-point-in-polygon": "^6.0.1",
     "d3-array": "^2.8.0",
     "d3-geo": "^2.0.1",
+    "d3-geo-voronoi": "^1.6.0",
     "delaunator": "^4.0.1",
     "earcut": "^2.2.2"
   },

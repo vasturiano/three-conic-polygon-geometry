@@ -12,11 +12,10 @@ const THREE = window.THREE
   Geometry
 };
 
-import Delaunator from 'delaunator';
+import { merge as flatten } from 'd3-array';
 import earcut from 'earcut';
-import turfPointInPolygon from '@turf/boolean-point-in-polygon';
-import { geoDistance, geoInterpolate } from 'd3-geo';
-import { extent, mean, merge as flatten } from 'd3-array';
+
+import geoPolygonTriangulate from './geoPolygonTriangulate';
 
 // support both modes for backwards threejs compatibility
 const setAttributeFn = new THREE.BufferGeometry().setAttribute ? 'setAttribute' : 'addAttribute';
@@ -68,8 +67,7 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
   curvatureResolution = curvatureResolution || 5; // in angular degrees
 
   // pre-calculate contour and triangulation
-  const contourGeoJson = interpolateContourPoints(polygonGeoJson, curvatureResolution);
-  const geoTriangles = (closedTop || closedBottom) && triangulateGeoSurface();
+  const { contour, triangles } = geoPolygonTriangulate(polygonGeoJson, { resolution: curvatureResolution });
 
   let vertices = [];
   let indices = [];
@@ -106,8 +104,8 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
   }
 
   function generateTorso() {
-    const { vertices: bottomVerts, holes } = generateVertices(contourGeoJson, startHeight);
-    const { vertices: topVerts } = generateVertices(contourGeoJson, endHeight);
+    const { vertices: bottomVerts, holes } = generateVertices(contour, startHeight);
+    const { vertices: topVerts } = generateVertices(contour, endHeight);
 
     const vertices = flatten([topVerts, bottomVerts]);
     const numPoints = Math.round(topVerts.length / 3);
@@ -137,41 +135,9 @@ function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, clos
   function generateCap(radius, isTop= true) {
     return {
       // need to reverse-wind the bottom triangles to make them face outwards
-      indices: isTop ? geoTriangles.indices : geoTriangles.indices.slice().reverse(),
-      vertices: generateVertices([geoTriangles.points], radius).vertices
+      indices: isTop ? triangles.indices : triangles.indices.slice().reverse(),
+      vertices: generateVertices([triangles.points], radius).vertices
     }
-  }
-
-  function triangulateGeoSurface() {
-    const edgePnts = flatten(contourGeoJson);
-    const innerPoints = getInnerGeoPoints(polygonGeoJson, curvatureResolution);
-
-    const points = [...edgePnts, ...innerPoints];
-
-    let indices = [];
-
-    if (!innerPoints.length) { // earcut triangulation slightly more performant if it's only using the polygon perimeter
-      const { vertices, holes = [] } = earcut.flatten(contourGeoJson);
-      indices = earcut(vertices, holes, 2);
-    } else {
-      const delaunay = Delaunator.from(points);
-
-      const boundariesGeojson = {type: 'Polygon', coordinates: polygonGeoJson};
-      for (let i = 0, len = delaunay.triangles.length; i < len; i += 3) {
-        const inds = [2, 1, 0].map(idx => delaunay.triangles[i + idx]); // reverse wound to have same orientation as earcut
-        const triangle = inds.map(indice => points[indice]);
-
-        // exclude edge triangles outside polygon perimeter or through holes
-        if (inds.some(ind => ind < edgePnts.length)) {
-          const triangleCentroid = [0, 1].map(coordIdx => mean(triangle, p => p[coordIdx]));
-          if (!pointInside(triangleCentroid, boundariesGeojson)) continue;
-        }
-
-        indices.push(...inds);
-      }
-    }
-
-    return { points, indices };
   }
 }
 
@@ -188,68 +154,6 @@ function polar2Cartesian(lat, lng, r = 0) {
     r * Math.cos(phi), // y
     r * Math.sin(phi) * Math.sin(theta) // z
   ];
-}
-
-function pointInside(pnt, polygonGeoJson) {
-  return turfPointInPolygon(pnt, polygonGeoJson);
-}
-
-function interpolateContourPoints(polygonGeoJson, maxDistance) {
-  // add interpolated points for segments that are further apart than the max distance
-  return polygonGeoJson.map(coords => {
-    const pnts = [];
-
-    let prevPnt;
-    coords.forEach(pnt => {
-      if (prevPnt) {
-        const dist = geoDistance(pnt, prevPnt) * 180 / Math.PI;
-        if (dist > maxDistance) {
-          const interpol = geoInterpolate(prevPnt, pnt);
-          const tStep = 1 / Math.ceil(dist / maxDistance);
-
-          let t = tStep;
-          while (t < 1) {
-            pnts.push(interpol(t));
-            t += tStep;
-          }
-        }
-      }
-
-      pnts.push(prevPnt = pnt);
-    });
-
-    return pnts;
-  });
-}
-
-function getInnerGeoPoints(polygonGeoJson, maxDistance) {
-  const [minLng, maxLng] = extent(polygonGeoJson[0], p => p[0]);
-  const [minLat, maxLat] = extent(polygonGeoJson[0], p => p[1]);
-
-  // polygon smaller than maxDistance -> no inner points
-  if (Math.min(maxLng - minLng, maxLat - minLat) < maxDistance) return [];
-
-  // distribute grid remainder equally on both sides
-  const startLng = minLng + (maxLng - minLng)%maxDistance / 2;
-  const startLat = minLat + (maxLat - minLat)%maxDistance / 2;
-
-  const pnts = [];
-  const boundariesGeojson = { type: 'Polygon', coordinates: polygonGeoJson };
-
-  // iterate through grid
-  let lng = startLng;
-  let lat;
-  while (lng < maxLng) {
-    lat = startLat;
-    while (lat < maxLat) {
-      const pnt = [lng, lat];
-      pointInside(pnt, boundariesGeojson) && pnts.push(pnt);
-      lat += maxDistance;
-    }
-    lng += maxDistance;
-  }
-
-  return pnts;
 }
 
 export { ConicPolygonGeometry, ConicPolygonBufferGeometry };
