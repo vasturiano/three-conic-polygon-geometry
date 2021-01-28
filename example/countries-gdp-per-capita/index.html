@@ -28,7 +28,7 @@
       polygons.forEach(coords => {
         polygonMeshes.push(
           new THREE.Mesh(
-            new THREE.ConicPolygonBufferGeometry(coords, 0, alt),
+            new THREE.ConicPolygonGeometry(coords, 0, alt),
             materials
           )
         );
