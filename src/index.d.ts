@@ -1,4 +1,4 @@
-import { Geometry, BufferGeometry } from 'three';
+import { BufferGeometry } from 'three';
 
 type PolygonCoords = number[][];
 
@@ -12,7 +12,7 @@ type Parameters = {
   curvatureResolution: number
 };
 
-export declare class ConicPolygonGeometry extends Geometry {
+export declare class ConicPolygonGeometry extends BufferGeometry {
   constructor(
     polygonGeoJson: PolygonCoords,
     startHeight?: number,
