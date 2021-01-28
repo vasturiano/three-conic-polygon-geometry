@@ -7,8 +7,6 @@ ThreeJS Conic Polygon Geometry
 
 A ThreeJS geometry class for drawing polygons on a sphere using cones. 
 
-Both `ConicPolygonGeometry` and `ConicPolygonBufferGeometry` are provided.
-
 <p align="center">
   <a href="//vasturiano.github.io/three-conic-polygon-geometry/example/countries-gdp-per-capita/"><img width="80%" src="https://vasturiano.github.io/three-conic-polygon-geometry/example/countries-gdp-per-capita/preview.png"></a>
 </p>

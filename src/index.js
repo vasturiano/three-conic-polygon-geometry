@@ -1,15 +1,13 @@
 import {
   BufferGeometry,
-  Float32BufferAttribute,
-  Geometry
+  Float32BufferAttribute
 } from 'three';
 
 const THREE = window.THREE
   ? window.THREE // Prefer consumption from global THREE, if exists
   : {
   BufferGeometry,
-  Float32BufferAttribute,
-  Geometry
+  Float32BufferAttribute
 };
 
 import { merge as flatten } from 'd3-array';
@@ -19,28 +17,6 @@ import geoPolygonTriangulate from './geoPolygonTriangulate';
 
 // support both modes for backwards threejs compatibility
 const setAttributeFn = new THREE.BufferGeometry().setAttribute ? 'setAttribute' : 'addAttribute';
-
-function ConicPolygonGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides, curvatureResolution) {
-  THREE.Geometry.call(this);
-
-  this.type = 'ConicPolygonGeometry';
-
-  this.parameters = {
-    polygonGeoJson,
-    startHeight,
-    endHeight,
-    closedBottom,
-    closedTop,
-    includeSides,
-    curvatureResolution
-  };
-
-  this.fromBufferGeometry(new ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides, curvatureResolution));
-  this.mergeVertices();
-}
-
-ConicPolygonGeometry.prototype = Object.create(THREE.Geometry.prototype);
-ConicPolygonGeometry.prototype.constructor = ConicPolygonGeometry;
 
 function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides, curvatureResolution) {
 
@@ -156,4 +132,4 @@ function polar2Cartesian(lat, lng, r = 0) {
   ];
 }
 
-export { ConicPolygonGeometry, ConicPolygonBufferGeometry };
+export { ConicPolygonBufferGeometry, ConicPolygonBufferGeometry as ConicPolygonGeometry };
