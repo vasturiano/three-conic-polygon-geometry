@@ -18,107 +18,105 @@ import geoPolygonTriangulate from './geoPolygonTriangulate';
 // support both modes for backwards threejs compatibility
 const setAttributeFn = new THREE.BufferGeometry().setAttribute ? 'setAttribute' : 'addAttribute';
 
-function ConicPolygonBufferGeometry(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides, curvatureResolution) {
+class ConicPolygonBufferGeometry extends THREE.BufferGeometry {
+  constructor(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides, curvatureResolution) {
+    super();
 
-  THREE.BufferGeometry.call(this);
+    this.type = 'ConicPolygonBufferGeometry';
 
-  this.type = 'ConicPolygonBufferGeometry';
+    this.parameters = {
+      polygonGeoJson,
+      startHeight,
+      endHeight,
+      closedBottom,
+      closedTop,
+      includeSides,
+      curvatureResolution
+    };
 
-  this.parameters = {
-    polygonGeoJson,
-    startHeight,
-    endHeight,
-    closedBottom,
-    closedTop,
-    includeSides,
-    curvatureResolution
-  };
+    // defaults
+    startHeight = startHeight || 0;
+    endHeight = endHeight || 1;
+    closedBottom = closedBottom !== undefined ? closedBottom : true;
+    closedTop = closedTop !== undefined ? closedTop : true;
+    includeSides = includeSides !== undefined ? includeSides : true;
+    curvatureResolution = curvatureResolution || 5; // in angular degrees
 
-  // defaults
-  startHeight = startHeight || 0;
-  endHeight = endHeight || 1;
-  closedBottom = closedBottom !== undefined ? closedBottom : true;
-  closedTop = closedTop !== undefined ? closedTop : true;
-  includeSides = includeSides !== undefined ? includeSides : true;
-  curvatureResolution = curvatureResolution || 5; // in angular degrees
+    // pre-calculate contour and triangulation
+    const {contour, triangles} = geoPolygonTriangulate(polygonGeoJson, {resolution: curvatureResolution});
 
-  // pre-calculate contour and triangulation
-  const { contour, triangles } = geoPolygonTriangulate(polygonGeoJson, { resolution: curvatureResolution });
+    let vertices = [];
+    let indices = [];
+    let groupCnt = 0; // add groups to apply different materials to torso / caps
 
-  let vertices = [];
-  let indices = [];
-  let groupCnt = 0; // add groups to apply different materials to torso / caps
+    const addGroup = groupData => {
+      const prevVertCnt = Math.round(vertices.length / 3);
+      const prevIndCnt = indices.length;
 
-  const addGroup = groupData => {
-    const prevVertCnt = Math.round(vertices.length / 3);
-    const prevIndCnt = indices.length;
+      vertices = vertices.concat(groupData.vertices);
+      indices = indices.concat(!prevVertCnt ? groupData.indices : groupData.indices.map(ind => ind + prevVertCnt));
 
-    vertices = vertices.concat(groupData.vertices);
-    indices = indices.concat(!prevVertCnt ? groupData.indices : groupData.indices.map(ind => ind + prevVertCnt));
+      this.addGroup(prevIndCnt, indices.length - prevIndCnt, groupCnt++);
+    };
 
-    this.addGroup(prevIndCnt, indices.length - prevIndCnt, groupCnt++);
-  };
+    includeSides && addGroup(generateTorso());
+    closedBottom && addGroup(generateCap(startHeight, false));
+    closedTop && addGroup(generateCap(endHeight, true));
 
-  includeSides && addGroup(generateTorso());
-  closedBottom && addGroup(generateCap(startHeight, false));
-  closedTop && addGroup(generateCap(endHeight, true));
+    // build geometry
+    this.setIndex(indices);
+    this[setAttributeFn]('position', new THREE.Float32BufferAttribute(vertices, 3));
 
-  // build geometry
-  this.setIndex(indices);
-  this[setAttributeFn]('position', new THREE.Float32BufferAttribute(vertices, 3));
+    // auto-calculate normals
+    this.computeFaceNormals();
+    this.computeVertexNormals();
 
-  // auto-calculate normals
-  this.computeFaceNormals();
-  this.computeVertexNormals();
+    //
 
-  //
-
-  function generateVertices(polygon, altitude) {
-    const coords3d = polygon.map(coords => coords.map(([lng, lat]) => polar2Cartesian(lat, lng, altitude)));
-    // returns { vertices, holes, coordinates }. Each point generates 3 vertice items (x,y,z).
-    return earcut.flatten(coords3d);
-  }
-
-  function generateTorso() {
-    const { vertices: bottomVerts, holes } = generateVertices(contour, startHeight);
-    const { vertices: topVerts } = generateVertices(contour, endHeight);
-
-    const vertices = flatten([topVerts, bottomVerts]);
-    const numPoints = Math.round(topVerts.length / 3);
-
-    const holesIdx = new Set(holes);
-    let lastHoleIdx = 0;
-
-    const indices = [];
-    for (let v0Idx = 0; v0Idx < numPoints; v0Idx++) {
-      let v1Idx = v0Idx + 1; // next point
-      if (v1Idx === numPoints) {
-        v1Idx = lastHoleIdx; // close final loop
-      } else if (holesIdx.has(v1Idx)) {
-        const holeIdx = v1Idx;
-        v1Idx = lastHoleIdx; // close hole loop
-        lastHoleIdx = holeIdx;
-      }
-
-      // Each pair of coords generates two triangles (faces)
-      indices.push(v0Idx, v0Idx + numPoints, v1Idx + numPoints);
-      indices.push(v1Idx + numPoints, v1Idx, v0Idx);
+    function generateVertices(polygon, altitude) {
+      const coords3d = polygon.map(coords => coords.map(([lng, lat]) => polar2Cartesian(lat, lng, altitude)));
+      // returns { vertices, holes, coordinates }. Each point generates 3 vertice items (x,y,z).
+      return earcut.flatten(coords3d);
     }
 
-    return { indices, vertices };
-  }
+    function generateTorso() {
+      const {vertices: bottomVerts, holes} = generateVertices(contour, startHeight);
+      const {vertices: topVerts} = generateVertices(contour, endHeight);
 
-  function generateCap(radius, isTop= true) {
-    return {
-      // need to reverse-wind the bottom triangles to make them face outwards
-      indices: isTop ? triangles.indices : triangles.indices.slice().reverse(),
-      vertices: generateVertices([triangles.points], radius).vertices
+      const vertices = flatten([topVerts, bottomVerts]);
+      const numPoints = Math.round(topVerts.length / 3);
+
+      const holesIdx = new Set(holes);
+      let lastHoleIdx = 0;
+
+      const indices = [];
+      for (let v0Idx = 0; v0Idx < numPoints; v0Idx++) {
+        let v1Idx = v0Idx + 1; // next point
+        if (v1Idx === numPoints) {
+          v1Idx = lastHoleIdx; // close final loop
+        } else if (holesIdx.has(v1Idx)) {
+          const holeIdx = v1Idx;
+          v1Idx = lastHoleIdx; // close hole loop
+          lastHoleIdx = holeIdx;
+        }
+
+        // Each pair of coords generates two triangles (faces)
+        indices.push(v0Idx, v0Idx + numPoints, v1Idx + numPoints);
+        indices.push(v1Idx + numPoints, v1Idx, v0Idx);
+      }
+
+      return {indices, vertices};
+    }
+
+    function generateCap(radius, isTop = true) {
+      return {
+        // need to reverse-wind the bottom triangles to make them face outwards
+        indices: isTop ? triangles.indices : triangles.indices.slice().reverse(),
+        vertices: generateVertices([triangles.points], radius).vertices
+      }
     }
   }
 }
-
-ConicPolygonBufferGeometry.prototype = Object.create(THREE.BufferGeometry.prototype);
-ConicPolygonBufferGeometry.prototype.constructor = ConicPolygonBufferGeometry;
 
 //
 
