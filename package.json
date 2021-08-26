@@ -39,7 +39,7 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "@turf/boolean-point-in-polygon": "^6.3",
+    "@turf/boolean-point-in-polygon": "^6.5",
     "d3-array": "1 - 3",
     "d3-geo": "1 - 3",
     "d3-geo-voronoi": "^1.6",
@@ -50,18 +50,18 @@
     "three": ">=0.72.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.14.6",
+    "@babel/core": "^7.15.0",
     "@babel/plugin-proposal-class-properties": "^7.14.5",
-    "@babel/plugin-proposal-object-rest-spread": "^7.14.5",
-    "@babel/preset-env": "^7.14.5",
+    "@babel/plugin-proposal-object-rest-spread": "^7.14.7",
+    "@babel/preset-env": "^7.15.0",
     "@rollup/plugin-babel": "^5.3.0",
-    "@rollup/plugin-commonjs": "^19.0.0",
-    "@rollup/plugin-node-resolve": "^13.0.0",
+    "@rollup/plugin-commonjs": "^20.0.0",
+    "@rollup/plugin-node-resolve": "^13.0.4",
     "@types/three": ">=0.72.0",
     "rimraf": "^3.0.2",
-    "rollup": "^2.52.1",
+    "rollup": "^2.56.3",
     "rollup-plugin-dts": "^3.0.2",
     "rollup-plugin-terser": "^7.0.2",
-    "typescript": "^4.3.4"
+    "typescript": "^4.3.5"
   }
 }
