@@ -68,7 +68,6 @@ class ConicPolygonBufferGeometry extends THREE.BufferGeometry {
     this[setAttributeFn]('position', new THREE.Float32BufferAttribute(vertices, 3));
 
     // auto-calculate normals
-    this.computeFaceNormals();
     this.computeVertexNormals();
 
     //
