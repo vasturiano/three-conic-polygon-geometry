@@ -1,6 +1,6 @@
 import { BufferGeometry } from 'three';
 
-type PolygonCoords = number[][];
+type PolygonCoords = number[][][];
 
 type Parameters = {
   polygonGeoJson: PolygonCoords,
