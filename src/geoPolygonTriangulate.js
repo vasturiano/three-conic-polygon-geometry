@@ -3,7 +3,8 @@ import earcut from 'earcut';
 import turfPointInPolygon from '@turf/boolean-point-in-polygon';
 import { geoDistance, geoInterpolate, geoBounds, geoContains } from 'd3-geo';
 import { geoVoronoi } from 'd3-geo-voronoi';
-import { mean, merge as flatten } from 'd3-array';
+import { mean, merge as flatten, extent } from 'd3-array';
+import { scaleLinear } from 'd3-scale';
 
 function geoPolygonTriangulate(polygon, {
   resolution = Infinity // curvature resolution, in spherical degrees
@@ -67,7 +68,12 @@ function geoPolygonTriangulate(polygon, {
     }
   }
 
-  const triangles = { points, indices };
+  // calc uvs
+  const lngUvScale = scaleLinear(extent(points, d => d[0]), [0,1]);
+  const latUvScale = scaleLinear(extent(points, d => d[1]), [0,1]);
+  const uvs = points.map(([lng, lat]) => [lngUvScale(lng), latUvScale(lat)]);
+
+  const triangles = { points, indices, uvs };
 
   return { contour, triangles };
 }

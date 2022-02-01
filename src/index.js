@@ -42,10 +42,12 @@ class ConicPolygonBufferGeometry extends THREE.BufferGeometry {
     includeSides = includeSides !== undefined ? includeSides : true;
     curvatureResolution = curvatureResolution || 5; // in angular degrees
 
-    // pre-calculate contour and triangulation
-    const {contour, triangles} = geoPolygonTriangulate(polygonGeoJson, {resolution: curvatureResolution});
+    // pre-calculate contour, triangulation and UV maps
+    const { contour, triangles } = geoPolygonTriangulate(polygonGeoJson, {resolution: curvatureResolution});
+    const flatUvs = flatten(triangles.uvs);
 
     let vertices = [];
+    let uvs = [];
     let indices = [];
     let groupCnt = 0; // add groups to apply different materials to torso / caps
 
@@ -54,6 +56,7 @@ class ConicPolygonBufferGeometry extends THREE.BufferGeometry {
       const prevIndCnt = indices.length;
 
       vertices = vertices.concat(groupData.vertices);
+      uvs = uvs.concat(groupData.uvs);
       indices = indices.concat(!prevVertCnt ? groupData.indices : groupData.indices.map(ind => ind + prevVertCnt));
 
       this.addGroup(prevIndCnt, indices.length - prevIndCnt, groupCnt++);
@@ -66,6 +69,7 @@ class ConicPolygonBufferGeometry extends THREE.BufferGeometry {
     // build geometry
     this.setIndex(indices);
     this[setAttributeFn]('position', new THREE.Float32BufferAttribute(vertices, 3));
+    this[setAttributeFn]('uv', new THREE.Float32BufferAttribute(uvs, 2));
 
     // auto-calculate normals
     this.computeVertexNormals();
@@ -104,14 +108,20 @@ class ConicPolygonBufferGeometry extends THREE.BufferGeometry {
         indices.push(v1Idx + numPoints, v1Idx, v0Idx);
       }
 
-      return {indices, vertices};
+      const uvs = []; // wrap texture around perimeter (u), with v=1 on top
+      for (let v=1; v>=0; v--)
+        for (let i=0; i<numPoints; i+=1)
+          uvs.push(i/(numPoints-1), v);
+
+      return { indices, vertices, uvs };
     }
 
     function generateCap(radius, isTop = true) {
       return {
         // need to reverse-wind the bottom triangles to make them face outwards
         indices: isTop ? triangles.indices : triangles.indices.slice().reverse(),
-        vertices: generateVertices([triangles.points], radius).vertices
+        vertices: generateVertices([triangles.points], radius).vertices,
+        uvs: flatUvs
       }
     }
   }
