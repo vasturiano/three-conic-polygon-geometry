@@ -20,11 +20,7 @@ Examples:
 ```js
 import { ConicPolygonGeometry } from 'three-conic-polygon-geometry';
 ```
-or
-```js
-const { ConicPolygonGeometry } = require('three-conic-polygon-geometry');
-```
-or even
+or using a *script* tag
 ```html
 <script src="//unpkg.com/three-conic-polygon-geometry"></script>
 ```
