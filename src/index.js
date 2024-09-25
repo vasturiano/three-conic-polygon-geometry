@@ -11,7 +11,7 @@ const THREE = window.THREE
 };
 
 import { merge as flatten } from 'd3-array';
-import earcut from 'earcut';
+import { flatten as earcutFlatten } from 'earcut';
 
 import geoPolygonTriangulate from './geoPolygonTriangulate';
 
@@ -79,7 +79,7 @@ class ConicPolygonBufferGeometry extends THREE.BufferGeometry {
     function generateVertices(polygon, altitude) {
       const coords3d = polygon.map(coords => coords.map(([lng, lat]) => polar2Cartesian(lat, lng, altitude)));
       // returns { vertices, holes, coordinates }. Each point generates 3 vertice items (x,y,z).
-      return earcut.flatten(coords3d);
+      return earcutFlatten(coords3d);
     }
 
     function generateTorso() {

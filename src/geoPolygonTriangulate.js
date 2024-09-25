@@ -1,5 +1,5 @@
 import Delaunator from 'delaunator';
-import earcut from 'earcut';
+import earcut, { flatten as earcutFlatten } from 'earcut';
 import turfPointInPolygon from '@turf/boolean-point-in-polygon';
 import { geoDistance, geoInterpolate, geoBounds, geoContains } from 'd3-geo';
 import { geoVoronoi } from 'd3-geo-voronoi';
@@ -48,7 +48,7 @@ function geoPolygonTriangulate(polygon, {
     });
   } else if (!innerPoints.length) {
     // earcut triangulation slightly more performing if it's only using the polygon perimeter
-    const { vertices, holes = [] } = earcut.flatten(contour);
+    const { vertices, holes = [] } = earcutFlatten(contour);
     indices = earcut(vertices, holes, 2);
   } else {
     // use delaunator
