@@ -8,6 +8,7 @@
   "module": "dist/three-conic-polygon-geometry.mjs",
   "types": "dist/three-conic-polygon-geometry.d.ts",
   "exports": {
+    "types": "./dist/three-conic-polygon-geometry.d.ts",
     "umd": "./dist/three-conic-polygon-geometry.min.js",
     "default": "./dist/three-conic-polygon-geometry.mjs"
   },
