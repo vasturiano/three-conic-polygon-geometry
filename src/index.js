@@ -18,11 +18,11 @@ import geoPolygonTriangulate from './geoPolygonTriangulate';
 // support both modes for backwards threejs compatibility
 const setAttributeFn = new THREE.BufferGeometry().setAttribute ? 'setAttribute' : 'addAttribute';
 
-class ConicPolygonBufferGeometry extends THREE.BufferGeometry {
+class ConicPolygonGeometry extends THREE.BufferGeometry {
   constructor(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides, curvatureResolution) {
     super();
 
-    this.type = 'ConicPolygonBufferGeometry';
+    this.type = 'ConicPolygonGeometry';
 
     this.parameters = {
       polygonGeoJson,
@@ -139,4 +139,4 @@ function polar2Cartesian(lat, lng, r = 0) {
   ];
 }
 
-export { ConicPolygonBufferGeometry, ConicPolygonBufferGeometry as ConicPolygonGeometry };
+export default ConicPolygonGeometry;

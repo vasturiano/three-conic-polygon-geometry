@@ -18,7 +18,7 @@ Examples:
 ## Quick start
 
 ```js
-import { ConicPolygonGeometry } from 'three-conic-polygon-geometry';
+import ConicPolygonGeometry from 'three-conic-polygon-geometry';
 ```
 or using a *script* tag
 ```html
@@ -27,7 +27,7 @@ or using a *script* tag
 then
 ```js
 const myMesh = new THREE.Mesh(
-  new THREE.ConicPolygonGeometry(polygonGeoJson),
+  new ConicPolygonGeometry(polygonGeoJson),
   new THREE.MeshBasicMaterial({ color: 'blue' })
 );
 
