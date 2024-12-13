@@ -2,23 +2,20 @@
   <style> body { margin: 0; } </style>
 
   <script type="importmap">{ "imports": {
-    "three": "//unpkg.com/three/build/three.module.js",
-    "three/addons/": "//unpkg.com/three/examples/jsm/"
+    "three": "https://esm.sh/three",
+    "three/addons/": "https://esm.sh/three/examples/jsm/"
   }}</script>
-  <script type="module">
-    import * as THREE from 'three';
-    window.THREE = { ...THREE };
-  </script>
 
+  <script type="module">import * as THREE from 'three'; window.THREE = { ...THREE };</script>
   <script src="//unpkg.com/three-conic-polygon-geometry" defer></script>
-<!--  <script src="../../dist/three-conic-polygon-geometry.js" defer></script>-->
+  <!--  <script src="../../dist/three-conic-polygon-geometry.js" defer></script>-->
 </head>
 
 <body>
 <div id="viz"></div>
 
 <script type="module">
-  import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
+  import { TrackballControls } from 'three/addons/controls/TrackballControls.js?external=three';
 
   fetch('../geojson/ne_110m_admin_0_countries.geojson').then(res => res.json()).then(countries =>
   {
