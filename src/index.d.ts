@@ -12,7 +12,7 @@ type Parameters = {
   curvatureResolution: number
 };
 
-export declare class ConicPolygonGeometry extends BufferGeometry {
+declare class ConicPolygonGeometry extends BufferGeometry {
   constructor(
     polygonGeoJson: PolygonCoords,
     startHeight?: number,
@@ -26,16 +26,4 @@ export declare class ConicPolygonGeometry extends BufferGeometry {
   parameters: Parameters;
 }
 
-export declare class ConicPolygonBufferGeometry extends BufferGeometry {
-  constructor(
-    polygonGeoJson: PolygonCoords,
-    startHeight?: number,
-    endHeight?: number,
-    closedBottom?: boolean,
-    closedTop?: boolean,
-    includeSides?: boolean,
-    curvatureResolution?: number
-  );
-
-  parameters: Parameters;
-}
+export default ConicPolygonGeometry;
