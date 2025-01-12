@@ -19,15 +19,15 @@ import geoPolygonTriangulate from './geoPolygonTriangulate';
 const setAttributeFn = new THREE.BufferGeometry().setAttribute ? 'setAttribute' : 'addAttribute';
 
 class ConicPolygonGeometry extends THREE.BufferGeometry {
-  constructor(polygonGeoJson, startHeight, endHeight, closedBottom, closedTop, includeSides, curvatureResolution) {
+  constructor(polygonGeoJson, bottomHeight, topHeight, closedBottom, closedTop, includeSides, curvatureResolution) {
     super();
 
     this.type = 'ConicPolygonGeometry';
 
     this.parameters = {
       polygonGeoJson,
-      startHeight,
-      endHeight,
+      bottomHeight,
+      topHeight,
       closedBottom,
       closedTop,
       includeSides,
@@ -35,8 +35,8 @@ class ConicPolygonGeometry extends THREE.BufferGeometry {
     };
 
     // defaults
-    startHeight = startHeight || 0;
-    endHeight = endHeight || 1;
+    bottomHeight = bottomHeight || 0;
+    topHeight = topHeight || 1;
     closedBottom = closedBottom !== undefined ? closedBottom : true;
     closedTop = closedTop !== undefined ? closedTop : true;
     includeSides = includeSides !== undefined ? includeSides : true;
@@ -63,8 +63,8 @@ class ConicPolygonGeometry extends THREE.BufferGeometry {
     };
 
     includeSides && addGroup(generateTorso());
-    closedBottom && addGroup(generateCap(startHeight, false));
-    closedTop && addGroup(generateCap(endHeight, true));
+    closedBottom && addGroup(generateCap(bottomHeight, false));
+    closedTop && addGroup(generateCap(topHeight, true));
 
     // build geometry
     this.setIndex(indices);
@@ -77,14 +77,15 @@ class ConicPolygonGeometry extends THREE.BufferGeometry {
     //
 
     function generateVertices(polygon, altitude) {
-      const coords3d = polygon.map(coords => coords.map(([lng, lat]) => polar2Cartesian(lat, lng, altitude)));
+      const altFn = typeof altitude === 'function' ? altitude : () => altitude;
+      const coords3d = polygon.map(coords => coords.map(([lng, lat]) => polar2Cartesian(lat, lng, altFn(lng, lat))));
       // returns { vertices, holes, coordinates }. Each point generates 3 vertice items (x,y,z).
       return earcutFlatten(coords3d);
     }
 
     function generateTorso() {
-      const {vertices: bottomVerts, holes} = generateVertices(contour, startHeight);
-      const {vertices: topVerts} = generateVertices(contour, endHeight);
+      const {vertices: bottomVerts, holes} = generateVertices(contour, bottomHeight);
+      const {vertices: topVerts} = generateVertices(contour, topHeight);
 
       const vertices = flatten([topVerts, bottomVerts]);
       const numPoints = Math.round(topVerts.length / 3);

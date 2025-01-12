@@ -40,8 +40,8 @@ const myMesh = new THREE.Mesh(
 <b>ConicPolygonGeometry</b>(<b>polygonGeoJson</b>: <i>GeoJson polygon coordinates</i>, <b>bottomHeight</b>: <i>Float</i>, <b>topHeight</b>: <i>Float</i>, <b>closedBottom</b>: <i>Boolean</i>, <b>closedTop</b>: <i>Boolean</i>, <b>includeSides</b>: <i>Boolean</i>, <b>curvatureResolution</b>: <i>Float</i>)
 
 * <b>polygonGeoJson</b>: Coordinates array as specified in GeoJson `geometry.coordinates` for `type: Polygon`. The first item is the polygon contour, additional items are the inner holes. It's recommended to split the geometries at the [anti-meridian](https://en.wikipedia.org/wiki/180th_meridian).
-* <b>bottomHeight</b>: Starting height of the cone. Default is `0`.
-* <b>topHeight</b>: Ending height of the cone. Default is `1`.
+* <b>bottomHeight</b>: Starting height of the cone. Can be either a constant or `(lng, lat) => height` accessor function that is invoked for every vertex in the  bottom surface. Default is `0`.
+* <b>topHeight</b>: Ending height of the cone. Can be either a constant or `(lng, lat) => height` accessor function that is invoked for every vertex in the  top surface. Default is `1`.
 * <b>closedBottom</b>: Whether to add a cap surface on the cone bottom. Default is `true`.
 * <b>closedTop</b>: Whether to add a cap surface on the cone top. Default is `true`.
 * <b>includeSides</b>: Whether to include the side surfaces of the cone. Default is `true`.

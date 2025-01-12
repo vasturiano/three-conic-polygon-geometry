@@ -4,8 +4,8 @@ type PolygonCoords = number[][][];
 
 type Parameters = {
   polygonGeoJson: PolygonCoords,
-  startHeight: number,
-  endHeight: number,
+  bottomHeight: number | ((lng: number, lat: number) => number),
+  topHeight: number | ((lng: number, lat: number) => number),
   closedBottom: boolean,
   closedTop: boolean,
   includeSides: boolean,
@@ -15,8 +15,8 @@ type Parameters = {
 declare class ConicPolygonGeometry extends BufferGeometry {
   constructor(
     polygonGeoJson: PolygonCoords,
-    startHeight?: number,
-    endHeight?: number,
+    bottomHeight?: number | ((lng: number, lat: number) => number),
+    topHeight?: number | ((lng: number, lat: number) => number),
     closedBottom?: boolean,
     closedTop?: boolean,
     includeSides?: boolean,
