@@ -3,6 +3,7 @@
 
   <script type="importmap">{ "imports": {
     "three": "https://esm.sh/three",
+    "three/": "https://esm.sh/three/",
     "three/addons/": "https://esm.sh/three/examples/jsm/"
   }}</script>
 
@@ -44,6 +45,7 @@
     // Setup renderer
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
     document.getElementById('viz').appendChild(renderer.domElement);
 
     // Setup scene
