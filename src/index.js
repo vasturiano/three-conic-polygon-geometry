@@ -126,6 +126,18 @@ class ConicPolygonGeometry extends THREE.BufferGeometry {
       }
     }
   }
+
+  clone() {
+    return new ConicPolygonGeometry(
+      this.parameters.polygonGeoJson,
+      this.parameters.bottomHeight,
+      this.parameters.topHeight,
+      this.parameters.closedBottom,
+      this.parameters.closedTop,
+      this.parameters.includeSides,
+      this.parameters.curvatureResolution
+    ).copy(this);
+  }
 }
 
 //
